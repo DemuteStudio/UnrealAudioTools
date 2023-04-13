@@ -204,7 +204,7 @@ void UAudioAnimationToolsWidget::AutoGenerateFoleyNotifies(UAnimSequence* Animat
 
 		float MovingSinceTime = -1.0f;
 		float PreviousBoneSpeed = 0.0f;
-		FVector PreviousBoneLocation = FVector::Zero();
+		FVector PreviousBoneLocation = FVector::ZeroVector;
 		for (float Time = AnimationTimeIncrement; Time < AnimationSequence->GetPlayLength(); Time+=AnimationTimeIncrement)
 		{
 			FVector BoneLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time);
