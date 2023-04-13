@@ -153,7 +153,6 @@ void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* Ani
 
 	if(WasAnimationFileModified)
 	{
-		AnimationSequence->MarkRawDataAsModified();
 		AnimationSequence->Modify(true);
 		AnimationSequence->RefreshCacheData();
 	}
@@ -283,7 +282,6 @@ void UAudioAnimationToolsWidget::AutoGenerateFoleyNotifies(UAnimSequence* Animat
 
 	if(WasAnimationFileModified)
 	{
-		AnimationSequence->MarkRawDataAsModified();
 		AnimationSequence->Modify(true);
 		AnimationSequence->RefreshCacheData();
 	}
