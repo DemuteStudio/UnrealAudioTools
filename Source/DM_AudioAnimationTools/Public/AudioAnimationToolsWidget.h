@@ -107,15 +107,15 @@ public:
 
 	//User modifiable variables
 	/**Height under which a foot is considered to touch the ground*/
-	UPROPERTY(EditAnywhere, Category="FootstepDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
 	float GroundContactStartThreshold = 3.0f;
 
 	/**Height added to the GroundContactStartThreshold above which a foot is considered to not touch the ground anymore*/
-	UPROPERTY(EditAnywhere, Category="FootstepDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
 	float GroundContactStopMargin = 3.0f;
 
 	/**The time in seconds used to calculate the speed of the foot just before a footstep (to derive its strength)*/
-	UPROPERTY(EditAnywhere, Category="FootstepDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
 	float FootstepSpeedCalculationWindow = 0.1f;
 
 	/**The percentage of footstep detection sensitivity*/
@@ -126,15 +126,15 @@ public:
 	 * For example if we set this as 50%, we are not filtering 50% of the footsteps.
 	 * We are filtering the footsteps that go slower than 50% of the max speed.
 	 */
-	UPROPERTY(EditAnywhere, Category="FootstepDetails", meta = (ClampMin = "0.0", ClampMax ="1.0", UIMin ="0.0", UIMax ="1.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails", meta = (ClampMin = "0.0", ClampMax ="1.0", UIMin ="0.0", UIMax ="1.0"))
 	float FootstepDetectionSensitivity = 1.0f;
 
 	/**In units per second, the speed above which a bone is considered to be moving*/
-	UPROPERTY(EditAnywhere, Category="FoleyDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FoleyDetails")
 	float FoleySpeedThreshold = 10.0f;
 
 	/**The time in seconds under which a movement will be considered too short to trigger*/
-	UPROPERTY(EditAnywhere, Category="FoleyDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FoleyDetails")
 	float FoleyMinimumMovementDuration = 0.05f;
 	
 	/**Class to use for newly created AnimNotifies (lets you use custom notifies)*/
