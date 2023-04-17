@@ -28,3 +28,15 @@ void AStaticMeshAudioEmitterBase::Tick(float DeltaTime)
 
 }
 
+void AStaticMeshAudioEmitterBase::SetNewReferencePosition(const FVector& NewPosition)
+{
+	SetActorLocation(PositionOffset? (GetActorLocation() - OriginalPosition)+NewPosition : NewPosition);
+	OriginalPosition = NewPosition;
+}
+
+void AStaticMeshAudioEmitterBase::SetNewReferenceRotation(const FRotator& NewRotation)
+{
+	SetActorRotation(PositionOffset? (GetActorRotation()- OriginalRotation) + NewRotation : NewRotation );
+	OriginalRotation = NewRotation;
+}
+
