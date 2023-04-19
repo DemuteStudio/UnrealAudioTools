@@ -1,12 +1,12 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.0.1",
 	"FriendlyName": "DM_AudioTools",
 	"Description": "",
-	"Category": "Other",
+	"Category": "Audio",
 	"CreatedBy": "Demute",
-	"CreatedByURL": "",
+	"CreatedByURL": "https://github.com/DemuteStudio/UnrealAudioTools",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
@@ -17,6 +17,11 @@
 	"Modules": [
 		{
 			"Name": "DM_AudioAnimationTools",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DM_StaticMeshEmitters",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
