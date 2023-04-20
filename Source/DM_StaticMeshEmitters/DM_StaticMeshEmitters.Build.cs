@@ -19,7 +19,10 @@ public class DM_StaticMeshEmitters : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore",
+                "UnrealEd",
+                "UMG",
+                "Blutility",
             }
         );
     }

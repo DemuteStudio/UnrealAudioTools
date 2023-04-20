@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0.1",
+	"VersionName": "1.1.1",
 	"FriendlyName": "DM_AudioTools",
 	"Description": "",
 	"Category": "Audio",
@@ -24,6 +24,12 @@
 			"Name": "DM_StaticMeshEmitters",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "EditorScriptingUtilities",
+			"Enabled": true
 		}
 	]
 }
