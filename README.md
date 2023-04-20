@@ -1,6 +1,7 @@
 # Demute Unreal Audio Tools
 
-The Demute Unreal Audio Tools is an open-source plugin for Unreal containing different tools that we developed for Game Audio implementation in Unreal 4 and 5 throughout our projects. It currently contains two completed modules :
+The Demute Unreal Audio Tools is an open-source plugin for Unreal containing different tools that we developed for Game Audio implementation in Unreal 4 and 5 throughout our projects. 
+It currently contains two completed modules :
 - Audio Animation Tools -> Automatically place tags for footsteps and foley on animation files
 - Static Mesh Emitters -> Automatically place point sources in levels
 
