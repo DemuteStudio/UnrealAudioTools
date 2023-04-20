@@ -13,13 +13,13 @@ struct FFootstepAudioData
 
 public:
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	FName BoneName;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float FootstepSpeed;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float FootstepTime;
 };
 
@@ -29,26 +29,26 @@ struct FFootstepAudioTrack
 
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	FName TrackName;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	TArray<FFootstepAudioData> Footsteps;
 
 	/**Used for debug purposes*/
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float LowestBonePosition;
 
 	/**Used for debug purposes*/
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float HighestBonePosition;
 
 	/**Used for filtering purposes*/
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float FastestBoneSpeed;
 
 	/**Used for filtering purposes*/
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Footstep Audio Data")
 	float SlowestBoneSpeed;
 };
 
@@ -59,16 +59,16 @@ struct FFoleyAudioData
 
 public:
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	FName BoneName;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	float FoleySpeed;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	float FoleyLength;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	float FoleyTime;
 	
 };
@@ -79,10 +79,10 @@ struct FFoleyAudioTrack
 
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	FName TrackName;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Foley Audio Data")
 	TArray<FFoleyAudioData> FoleyMovements;
 };
 
@@ -97,11 +97,11 @@ class DM_AUDIOANIMATIONTOOLS_API UAudioAnimationToolsWidget : public UEditorUtil
 
 public:
 	//Blueprint methods
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Audio Animation Tools Widget")
 	void AutoGenerateFootstepNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TMap<UAnimNotify*, FFootstepAudioData>& CreatedNotifies, TArray
 	                                  <FFootstepAudioTrack>& CreatedTracks);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Audio Animation Tools Widget")
 	void AutoGenerateFoleyNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TMap<UAnimNotify*, FFoleyAudioData>& CreatedNotifies, TArray
 	                               <FFoleyAudioTrack>& CreatedTracks);
 
@@ -138,7 +138,7 @@ public:
 	float FoleyMinimumMovementDuration = 0.05f;
 	
 	/**Class to use for newly created AnimNotifies (lets you use custom notifies)*/
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Audio Animation Tools Widget")
 	TSubclassOf<UAnimNotify> AnimNotifyClass;
 
 	/**Should the anim tool spam the log with information*/

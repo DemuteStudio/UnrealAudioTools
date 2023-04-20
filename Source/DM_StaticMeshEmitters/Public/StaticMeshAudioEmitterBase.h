@@ -41,16 +41,16 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "Static Mesh Audio Emitter")
 	FRotator OriginalRotation;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Static Mesh Audio Emitter")
 	FVector GetReferencePosition() const {return PositionOffset? OriginalPosition : GetActorLocation();}
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Static Mesh Audio Emitter")
 	FRotator GetReferenceRotation() const {return PositionOffset? OriginalRotation : GetActorRotation();}
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Static Mesh Audio Emitter")
 	void SetNewReferencePosition(const FVector& NewPosition);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Static Mesh Audio Emitter")
 	void SetNewReferenceRotation(const FRotator& NewRotation);
 
 	/**We store a soft pointer to the component this source is "attached" to*/
