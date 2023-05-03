@@ -24,6 +24,11 @@
 			"Name": "DM_StaticMeshEmitters",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DM_GroupedAudioSources",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
