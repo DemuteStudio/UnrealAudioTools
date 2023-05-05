@@ -33,6 +33,9 @@ public:
 	virtual TStatId GetStatId() const override;
 	//~ End FTickableGameObject Interface
 
+
+	void SubscribeToGroupedAudioSourcesTick(UAudioSourcesGroupHandle* InObjectToTick);
+	
 	//static methods
 	static UGroupedAudioSourcesSubsystem* Get(UWorld* World);
 
@@ -40,10 +43,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
 	UAudioSourcesGroupHandle* RegisterNewAudioSource(const UObject* WorldContextObject, FName GroupName, USceneComponent* AudioComponent, FAudioSourcesGroupSettings InSettings, bool bOverrideSettingsIfGroupExists = false);
 
+	//Unregister an audio source
+	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
+	void UnregisterAudioSource(const UObject* WorldContextObject, FName GroupName, USceneComponent* AudioComponent);
+
+	//Get handle for existing group
+	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
+	UAudioSourcesGroupHandle* GetHandleForAudioGroup(const UObject* WorldContextObject, FName GroupName);
+
 	//Method that will make it possible to handle the manager on different threads in the future.
 	FGroupedAudioSourcesManager* GetManagerForClock(const UObject* WorldContextObject, FName ExistingGroupName = FName());
 
 	
 private:
 	FGroupedAudioSourcesManager SubsystemGroupsManager;
+
+	// list of objects needing to be ticked
+	TArray<UAudioSourcesGroupHandle*> GroupedAudioSourcesSubscribers;
 };

@@ -21,6 +21,8 @@ public:
 	void Flush();
 	int32 GetNumGroups() const {return ActiveGroups.Num();}
 	TSharedPtr<FAudioSourcesGroup> RegisterNewAudioSource(const FName& InGroupName, USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists = false);
+	void UnregisterAudioSource(const FName& InName, USceneComponent* SceneComponent);
+	bool DoesGroupExist(const FName& InGroupName);
 
 private:
 	TArray<TSharedPtr<FAudioSourcesGroup>> ActiveGroups;

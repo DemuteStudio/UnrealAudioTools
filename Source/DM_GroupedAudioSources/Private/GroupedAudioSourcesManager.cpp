@@ -61,6 +61,23 @@ TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::RegisterNewAudioSour
 	return Group;
 }
 
+void FGroupedAudioSourcesManager::UnregisterAudioSource(const FName& InName, USceneComponent* SceneComponent)
+{
+	const int32 NumGroups = ActiveGroups.Num();
+	for (int32 i = NumGroups - 1; i>=0; --i)
+	{
+		if(ActiveGroups[i]->GetName() == InName)
+		{
+			ActiveGroups[i]->TrackedAudioComponents.Remove(SceneComponent);
+		}
+	}
+}
+
+bool FGroupedAudioSourcesManager::DoesGroupExist(const FName& InGroupName)
+{
+	return !!FindGroup(InGroupName);
+}
+
 TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::FindGroup(const FName& InName)
 {
 	for (TSharedPtr<FAudioSourcesGroup> ActiveGroup : ActiveGroups)

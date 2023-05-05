@@ -3,6 +3,8 @@
 
 #include "GroupedAudioSourcesSubsystem.h"
 
+#include "AudioSourcesGroupHandle.h"
+
 UGroupedAudioSourcesSubsystem::UGroupedAudioSourcesSubsystem()
 {
 }
@@ -46,12 +48,42 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(
 
 	GroupsManager->RegisterNewAudioSource(GroupName, AudioComponent, InSettings, bOverrideSettingsIfGroupExists);
 
-	return nullptr;
+	UAudioSourcesGroupHandle* GroupHandlePtr = NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld());
+	return GroupHandlePtr;
+}
 
+void UGroupedAudioSourcesSubsystem::UnregisterAudioSource(const UObject* WorldContextObject,
+	FName GroupName, USceneComponent* AudioComponent)
+{
+	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
+	if(!GroupsManager)
+	{
+		return;
+	}
+
+	GroupsManager->UnregisterAudioSource(GroupName, AudioComponent);
+	
+}
+
+UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::GetHandleForAudioGroup(const UObject* WorldContextObject,
+	FName GroupName)
+{
+	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
+	if(!GroupsManager)
+	{
+		return nullptr;
+	}
+
+	if(GroupsManager->DoesGroupExist(GroupName))
+	{
+		return NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld());
+	}
+
+	return nullptr;
 }
 
 FGroupedAudioSourcesManager* UGroupedAudioSourcesSubsystem::GetManagerForClock(const UObject* WorldContextObject,
-	FName ExistingGroupName)
+                                                                               FName ExistingGroupName)
 {
 	return &SubsystemGroupsManager;
 }
@@ -73,4 +105,14 @@ bool UGroupedAudioSourcesSubsystem::IsTickable() const
 TStatId UGroupedAudioSourcesSubsystem::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UGroupedAudioSourcesSubsystem, STATGROUP_Tickables);
+}
+
+void UGroupedAudioSourcesSubsystem::SubscribeToGroupedAudioSourcesTick(UAudioSourcesGroupHandle* InObjectToTick)
+{
+	if(!InObjectToTick)
+	{
+		return;
+	}
+
+	GroupedAudioSourcesSubscribers.AddUnique(InObjectToTick);
 }
