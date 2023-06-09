@@ -22,6 +22,7 @@ public:
 	
 	bool DoesMatchSettings(const FAudioSourcesGroupSettings& InGroupSettings) const;
 	void ChangeGroupSettings(const FAudioSourcesGroupSettings& InNewSettings);
+	int GetActiveSourcesCount() const;
 
 	TArray<USceneComponent*> TrackedAudioComponents;
 

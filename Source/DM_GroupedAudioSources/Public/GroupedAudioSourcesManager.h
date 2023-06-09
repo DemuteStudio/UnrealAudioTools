@@ -5,14 +5,16 @@
 #include "CoreMinimal.h"
 #include "GroupedAudioSourcesUtilities.h"
 #include "AudioSourcesGroup.h"
+#include "AudioSourcesGroupHandle.h"
 
+class UGroupedAudioSourcesSubsystem;
 /**
  * 
  */
 class DM_GROUPEDAUDIOSOURCES_API FGroupedAudioSourcesManager
 {
 public:
-	FGroupedAudioSourcesManager();
+	FGroupedAudioSourcesManager(UGroupedAudioSourcesSubsystem* InOwner = nullptr);
 	~FGroupedAudioSourcesManager();
 
 	void Tick(float DeltaTime);
@@ -23,10 +25,14 @@ public:
 	TSharedPtr<FAudioSourcesGroup> RegisterNewAudioSource(const FName& InGroupName, USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists = false);
 	void UnregisterAudioSource(const FName& InName, USceneComponent* SceneComponent);
 	bool DoesGroupExist(const FName& InGroupName);
+	int GetActiveSourcesCountForGroup(const FName& InGroupName);
 
 private:
 	TArray<TSharedPtr<FAudioSourcesGroup>> ActiveGroups;
 
 	TSharedPtr<FAudioSourcesGroup> FindGroup(const FName& InName);
+
+	//Pointer to owner subsystem
+	UGroupedAudioSourcesSubsystem* Subsystem;
 
 };

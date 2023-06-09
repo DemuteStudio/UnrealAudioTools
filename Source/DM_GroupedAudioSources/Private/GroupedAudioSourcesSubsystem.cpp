@@ -5,7 +5,7 @@
 
 #include "AudioSourcesGroupHandle.h"
 
-UGroupedAudioSourcesSubsystem::UGroupedAudioSourcesSubsystem()
+UGroupedAudioSourcesSubsystem::UGroupedAudioSourcesSubsystem() : SubsystemGroupsManager(this)
 {
 }
 
@@ -41,6 +41,8 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(
 
 	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
 
+	AudioSourcesGroups.AddUnique(GroupName);
+	
 	if(!GroupsManager)
 	{
 		return nullptr;
@@ -48,7 +50,7 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(
 
 	GroupsManager->RegisterNewAudioSource(GroupName, AudioComponent, InSettings, bOverrideSettingsIfGroupExists);
 
-	UAudioSourcesGroupHandle* GroupHandlePtr = NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld());
+	UAudioSourcesGroupHandle* GroupHandlePtr = NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld())->SubscribeToGroup(WorldContextObject, GroupName);
 	return GroupHandlePtr;
 }
 
@@ -76,10 +78,37 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::GetHandleForAudioGroup(
 
 	if(GroupsManager->DoesGroupExist(GroupName))
 	{
-		return NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld());
+		return NewObject<UAudioSourcesGroupHandle>()->Init(WorldContextObject->GetWorld())->SubscribeToGroup(WorldContextObject,GroupName);
 	}
 
 	return nullptr;
+}
+
+TArray<UAudioSourcesGroupHandle*> UGroupedAudioSourcesSubsystem::GetHandlesForAllAudioGroups(
+	const UObject* WorldContextObject)
+{
+	//I'm not sure how to tackle this, so for the moment I'll first check if there is handle existing for every group,
+	//then create new ones for the groups that don't have one. This is because I'd like to be able to call this often
+	//for profiling purposes.
+
+	TArray<UAudioSourcesGroupHandle*> Handles;
+	for (FName GroupName : AudioSourcesGroups)
+	{
+		UAudioSourcesGroupHandle* GroupHandle = *GroupedAudioSourcesSubscribers.FindByPredicate(
+			[GroupName](const UAudioSourcesGroupHandle* handle)
+			{
+				return (handle->GetGroupName() == GroupName);
+			});
+
+		if(!GroupHandle)
+		{
+			GroupHandle = GetHandleForAudioGroup(WorldContextObject, GroupName);
+		}
+
+		Handles.Add(GroupHandle);
+	}
+
+	return Handles;
 }
 
 FGroupedAudioSourcesManager* UGroupedAudioSourcesSubsystem::GetManagerForClock(const UObject* WorldContextObject,

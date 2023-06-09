@@ -17,7 +17,7 @@ FAudioSourcesGroup::~FAudioSourcesGroup()
 
 void FAudioSourcesGroup::Tick(float DeltaTime)
 {
-	
+	//UE_LOG(LogTemp, Display, TEXT("I'm ticking! %s"), *Name.ToString());
 }
 
 bool FAudioSourcesGroup::DoesMatchSettings(const FAudioSourcesGroupSettings& InGroupSettings) const
@@ -28,4 +28,9 @@ bool FAudioSourcesGroup::DoesMatchSettings(const FAudioSourcesGroupSettings& InG
 
 void FAudioSourcesGroup::ChangeGroupSettings(const FAudioSourcesGroupSettings& InNewSettings)
 {
+}
+
+int FAudioSourcesGroup::GetActiveSourcesCount() const
+{
+	return TrackedAudioComponents.Num();
 }

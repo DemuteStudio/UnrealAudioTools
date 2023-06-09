@@ -18,10 +18,22 @@ class DM_GROUPEDAUDIOSOURCES_API UAudioSourcesGroupHandle : public UObject
 public:
 	UAudioSourcesGroupHandle* Init(UWorld* InWorldPtr);
 
+	UFUNCTION(BlueprintCallable, Category = "Audio Sources Group")
+	FName GetGroupName() const { return CurrentGroupId; }
+
+	UFUNCTION(BlueprintCallable, Category = "Audio Sources Group", meta = (WorldContext = "WorldContextObject"))
+	int GetNumberOfActiveSources(const UObject* WorldContextObject) const;
+	
+	UAudioSourcesGroupHandle* SubscribeToGroup(const UObject* WorldContextObject, FName GroupName);
+
 private:
 	UPROPERTY(Transient)
 	UWorld* WorldPtr{nullptr};
 
 	UPROPERTY(Transient)
 	UGroupedAudioSourcesSubsystem* GroupedAudioSourcesSubsystem;
+
+	FName CurrentGroupId;
+	FName GroupHandleId;
+	bool bConnectedToGroup{false};
 };

@@ -18,3 +18,33 @@ UAudioSourcesGroupHandle* UAudioSourcesGroupHandle::Init(UWorld* InWorldPtr)
 	return this;
 }
 
+int UAudioSourcesGroupHandle::GetNumberOfActiveSources(const UObject* WorldContextObject) const
+{
+	if (GroupedAudioSourcesSubsystem)
+	{
+		FGroupedAudioSourcesManager* GroupedSourcesManager = GroupedAudioSourcesSubsystem->GetManagerForClock(WorldContextObject, GetGroupName());
+
+		if (GroupedSourcesManager)
+		{
+			return GroupedSourcesManager->GetActiveSourcesCountForGroup(CurrentGroupId);
+		}
+	}
+
+	return 0;
+}
+
+UAudioSourcesGroupHandle* UAudioSourcesGroupHandle::SubscribeToGroup(const UObject* WorldContextObject, FName GroupName)
+{
+	// create ID
+	CurrentGroupId = GroupName;
+
+	FString TempId = WorldContextObject->GetFName().ToString();
+	TempId.Append(CurrentGroupId.ToString());
+	GroupHandleId = FName(*TempId);
+
+	// TODO: subscribe to clock w/ ClockHandleId
+	bConnectedToGroup = true;
+
+	return this;
+}
+

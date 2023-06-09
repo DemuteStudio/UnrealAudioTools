@@ -51,6 +51,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
 	UAudioSourcesGroupHandle* GetHandleForAudioGroup(const UObject* WorldContextObject, FName GroupName);
 
+	//Get handles for all existing groups
+	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
+	TArray<UAudioSourcesGroupHandle*> GetHandlesForAllAudioGroups(const UObject* WorldContextObject);
+
 	//Method that will make it possible to handle the manager on different threads in the future.
 	FGroupedAudioSourcesManager* GetManagerForClock(const UObject* WorldContextObject, FName ExistingGroupName = FName());
 
@@ -60,4 +64,6 @@ private:
 
 	// list of objects needing to be ticked
 	TArray<UAudioSourcesGroupHandle*> GroupedAudioSourcesSubscribers;
+
+	TArray<FName> AudioSourcesGroups;
 };

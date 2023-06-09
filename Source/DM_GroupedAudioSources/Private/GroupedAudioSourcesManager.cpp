@@ -3,7 +3,7 @@
 
 #include "GroupedAudioSourcesManager.h"
 
-FGroupedAudioSourcesManager::FGroupedAudioSourcesManager()
+FGroupedAudioSourcesManager::FGroupedAudioSourcesManager(UGroupedAudioSourcesSubsystem* InOwner) : Subsystem(InOwner)
 {
 }
 
@@ -35,7 +35,7 @@ void FGroupedAudioSourcesManager::Flush()
 }
 
 TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::RegisterNewAudioSource(const FName& InGroupName,
-	USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists)
+                                                                                   USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists)
 {
 	//make a copy of the Settings
 	FAudioSourcesGroupSettings NewSettings = InSettings;
@@ -76,6 +76,14 @@ void FGroupedAudioSourcesManager::UnregisterAudioSource(const FName& InName, USc
 bool FGroupedAudioSourcesManager::DoesGroupExist(const FName& InGroupName)
 {
 	return !!FindGroup(InGroupName);
+}
+
+int FGroupedAudioSourcesManager::GetActiveSourcesCountForGroup(const FName& InGroupName)
+{
+	const TSharedPtr<FAudioSourcesGroup> Group = FindGroup(InGroupName);
+
+	return Group->GetActiveSourcesCount();
+
 }
 
 TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::FindGroup(const FName& InName)
