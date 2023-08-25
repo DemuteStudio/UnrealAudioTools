@@ -31,7 +31,7 @@ UGroupedAudioSourcesSubsystem* UGroupedAudioSourcesSubsystem::Get(UWorld* World)
 }
 
 UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(const UObject* WorldContextObject,
-	FName GroupName, USceneComponent* AudioComponent, FAudioSourcesGroupSettings InSettings, bool
+	FName GroupName, UGroupedAudioComponent* AudioComponent, FAudioSourcesGroupSettings InSettings, bool
 	bOverrideSettingsIfGroupExists)
 {
 	if(GroupName.IsNone())
@@ -39,7 +39,7 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(
 		return nullptr;
 	}
 
-	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
+	FGroupedAudioSourcesManager* GroupsManager = GetManagerForGroup(WorldContextObject, GroupName);
 
 	AudioSourcesGroups.AddUnique(GroupName);
 	
@@ -55,9 +55,9 @@ UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::RegisterNewAudioSource(
 }
 
 void UGroupedAudioSourcesSubsystem::UnregisterAudioSource(const UObject* WorldContextObject,
-	FName GroupName, USceneComponent* AudioComponent)
+	FName GroupName, UGroupedAudioComponent* AudioComponent)
 {
-	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
+	FGroupedAudioSourcesManager* GroupsManager = GetManagerForGroup(WorldContextObject, GroupName);
 	if(!GroupsManager)
 	{
 		return;
@@ -70,7 +70,7 @@ void UGroupedAudioSourcesSubsystem::UnregisterAudioSource(const UObject* WorldCo
 UAudioSourcesGroupHandle* UGroupedAudioSourcesSubsystem::GetHandleForAudioGroup(const UObject* WorldContextObject,
 	FName GroupName)
 {
-	FGroupedAudioSourcesManager* GroupsManager = GetManagerForClock(WorldContextObject, GroupName);
+	FGroupedAudioSourcesManager* GroupsManager = GetManagerForGroup(WorldContextObject, GroupName);
 	if(!GroupsManager)
 	{
 		return nullptr;
@@ -111,7 +111,7 @@ TArray<UAudioSourcesGroupHandle*> UGroupedAudioSourcesSubsystem::GetHandlesForAl
 	return Handles;
 }
 
-FGroupedAudioSourcesManager* UGroupedAudioSourcesSubsystem::GetManagerForClock(const UObject* WorldContextObject,
+FGroupedAudioSourcesManager* UGroupedAudioSourcesSubsystem::GetManagerForGroup(const UObject* WorldContextObject,
                                                                                FName ExistingGroupName)
 {
 	return &SubsystemGroupsManager;

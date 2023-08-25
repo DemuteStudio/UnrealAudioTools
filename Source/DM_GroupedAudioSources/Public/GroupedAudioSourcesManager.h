@@ -22,11 +22,15 @@ public:
 	void Shutdown();
 	void Flush();
 	int32 GetNumGroups() const {return ActiveGroups.Num();}
-	TSharedPtr<FAudioSourcesGroup> RegisterNewAudioSource(const FName& InGroupName, USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists = false);
-	void UnregisterAudioSource(const FName& InName, USceneComponent* SceneComponent);
+	TSharedPtr<FAudioSourcesGroup> RegisterNewAudioSource(const FName& InGroupName, UGroupedAudioComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool
+	                                                      bOverrideSettingsIfGroupExists = false);
+	void UnregisterAudioSource(const FName& InName, UGroupedAudioComponent* AudioComponent);
 	bool DoesGroupExist(const FName& InGroupName);
 	int GetActiveSourcesCountForGroup(const FName& InGroupName);
+	int GetActiveClustersCountForGroup(const FName& InGroupName);
 
+	FVector CurrentListenerPosition;
+	
 private:
 	TArray<TSharedPtr<FAudioSourcesGroup>> ActiveGroups;
 

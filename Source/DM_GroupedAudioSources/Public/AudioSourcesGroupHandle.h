@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GroupedAudioSourcesSubsystem.h"
 #include "UObject/NoExportTypes.h"
 #include "AudioSourcesGroupHandle.generated.h"
 
+class UGroupedAudioSourcesSubsystem;
 /**
  * 
  */
@@ -23,6 +23,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Audio Sources Group", meta = (WorldContext = "WorldContextObject"))
 	int GetNumberOfActiveSources(const UObject* WorldContextObject) const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Audio Sources Group", meta = (WorldContext = "WorldContextObject"))
+	int GetNumberOfActiveClusters(const UObject* WorldContextObject) const;
 	
 	UAudioSourcesGroupHandle* SubscribeToGroup(const UObject* WorldContextObject, FName GroupName);
 

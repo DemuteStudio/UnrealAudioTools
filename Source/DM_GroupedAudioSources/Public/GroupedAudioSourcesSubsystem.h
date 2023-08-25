@@ -41,11 +41,12 @@ public:
 
 	//Register a new audio source
 	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
-	UAudioSourcesGroupHandle* RegisterNewAudioSource(const UObject* WorldContextObject, FName GroupName, USceneComponent* AudioComponent, FAudioSourcesGroupSettings InSettings, bool bOverrideSettingsIfGroupExists = false);
+	UAudioSourcesGroupHandle* RegisterNewAudioSource(const UObject* WorldContextObject, FName GroupName, UGroupedAudioComponent* AudioComponent, FAudioSourcesGroupSettings
+	                                                 InSettings, bool bOverrideSettingsIfGroupExists = false);
 
 	//Unregister an audio source
 	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
-	void UnregisterAudioSource(const UObject* WorldContextObject, FName GroupName, USceneComponent* AudioComponent);
+	void UnregisterAudioSource(const UObject* WorldContextObject, FName GroupName, UGroupedAudioComponent* AudioComponent);
 
 	//Get handle for existing group
 	UFUNCTION(BlueprintCallable, Category = "Grouped Audio Sources", meta = (WorldContext = "WorldContextObject"))
@@ -56,13 +57,14 @@ public:
 	TArray<UAudioSourcesGroupHandle*> GetHandlesForAllAudioGroups(const UObject* WorldContextObject);
 
 	//Method that will make it possible to handle the manager on different threads in the future.
-	FGroupedAudioSourcesManager* GetManagerForClock(const UObject* WorldContextObject, FName ExistingGroupName = FName());
+	FGroupedAudioSourcesManager* GetManagerForGroup(const UObject* WorldContextObject, FName ExistingGroupName = FName());
 
 	
 private:
 	FGroupedAudioSourcesManager SubsystemGroupsManager;
 
 	// list of objects needing to be ticked
+	UPROPERTY()
 	TArray<UAudioSourcesGroupHandle*> GroupedAudioSourcesSubscribers;
 
 	TArray<FName> AudioSourcesGroups;

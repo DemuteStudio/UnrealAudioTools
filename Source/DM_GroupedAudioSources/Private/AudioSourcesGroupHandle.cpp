@@ -22,11 +22,26 @@ int UAudioSourcesGroupHandle::GetNumberOfActiveSources(const UObject* WorldConte
 {
 	if (GroupedAudioSourcesSubsystem)
 	{
-		FGroupedAudioSourcesManager* GroupedSourcesManager = GroupedAudioSourcesSubsystem->GetManagerForClock(WorldContextObject, GetGroupName());
+		FGroupedAudioSourcesManager* GroupedSourcesManager = GroupedAudioSourcesSubsystem->GetManagerForGroup(WorldContextObject, GetGroupName());
 
 		if (GroupedSourcesManager)
 		{
 			return GroupedSourcesManager->GetActiveSourcesCountForGroup(CurrentGroupId);
+		}
+	}
+
+	return 0;
+}
+
+int UAudioSourcesGroupHandle::GetNumberOfActiveClusters(const UObject* WorldContextObject) const
+{
+	if (GroupedAudioSourcesSubsystem)
+	{
+		FGroupedAudioSourcesManager* GroupedSourcesManager = GroupedAudioSourcesSubsystem->GetManagerForGroup(WorldContextObject, GetGroupName());
+
+		if (GroupedSourcesManager)
+		{
+			return GroupedSourcesManager->GetActiveClustersCountForGroup(CurrentGroupId);
 		}
 	}
 

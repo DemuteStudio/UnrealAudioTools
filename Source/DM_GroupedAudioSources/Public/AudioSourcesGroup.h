@@ -6,6 +6,7 @@
 #include "GroupedAudioSourcesUtilities.h"
 
 // forwards
+class UGroupedAudioComponent;
 class FGroupedAudioSourcesManager;
 /**
  * 
@@ -23,8 +24,10 @@ public:
 	bool DoesMatchSettings(const FAudioSourcesGroupSettings& InGroupSettings) const;
 	void ChangeGroupSettings(const FAudioSourcesGroupSettings& InNewSettings);
 	int GetActiveSourcesCount() const;
+	int GetActiveClustersCount() const;
 
-	TArray<USceneComponent*> TrackedAudioComponents;
+	TArray<UGroupedAudioComponent*> TrackedAudioComponents;
+	TArray<UAudioCluster*> Clusters;
 
 private:
 
@@ -32,3 +35,5 @@ private:
 	FAudioSourcesGroupSettings GroupSettings;
 	FGroupedAudioSourcesManager* OwningGroupManagerPtr {nullptr};
 };
+
+

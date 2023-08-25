@@ -6,6 +6,9 @@
 
 #include "GroupedAudioSourcesUtilities.generated.h"
 
+//forwards
+class UGroupedAudioComponent;
+
 ENGINE_API DECLARE_LOG_CATEGORY_EXTERN(LogAudioGroups, Log, All);
 
 USTRUCT(BlueprintType)
@@ -16,4 +19,24 @@ struct DM_GROUPEDAUDIOSOURCES_API FAudioSourcesGroupSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grouped Audio Sources Settings")
 	float MaxAttenuationDistance;
 	
+};
+
+UCLASS()
+class DM_GROUPEDAUDIOSOURCES_API UAudioCluster : public UObject
+{
+
+	GENERATED_BODY()
+
+public:
+
+	void ChangeClusterRoot(UGroupedAudioComponent* NewRootComponent, FVector NewLocation, float NewDistanceSquared);
+
+	UPROPERTY()
+	FVector ClusterLocation;
+	
+	UPROPERTY()
+	float ClusterDistanceSquared;
+	
+	UPROPERTY()
+	UGroupedAudioComponent* ClosestComponent;
 };

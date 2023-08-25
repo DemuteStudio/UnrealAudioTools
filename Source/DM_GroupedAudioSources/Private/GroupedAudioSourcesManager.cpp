@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+
+#include "Kismet/GameplayStatics.h"
 #include "GroupedAudioSourcesManager.h"
 
 FGroupedAudioSourcesManager::FGroupedAudioSourcesManager(UGroupedAudioSourcesSubsystem* InOwner) : Subsystem(InOwner)
@@ -13,6 +15,12 @@ FGroupedAudioSourcesManager::~FGroupedAudioSourcesManager()
 
 void FGroupedAudioSourcesManager::Tick(float DeltaTime)
 {
+	
+	//Store listener location here so that groups can all reference it
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(Subsystem->GetWorld(), 0);
+	if(!PlayerController) return;
+	PlayerController->GetAudioListenerAttenuationOverridePosition(CurrentListenerPosition);
+	
 	for (const TSharedPtr<FAudioSourcesGroup> ActiveGroup : ActiveGroups)
 	{
 		ActiveGroup->Tick(DeltaTime);
@@ -35,7 +43,7 @@ void FGroupedAudioSourcesManager::Flush()
 }
 
 TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::RegisterNewAudioSource(const FName& InGroupName,
-                                                                                   USceneComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists)
+                                                                                   UGroupedAudioComponent* AudioComponent, const FAudioSourcesGroupSettings& InSettings, bool bOverrideSettingsIfGroupExists)
 {
 	//make a copy of the Settings
 	FAudioSourcesGroupSettings NewSettings = InSettings;
@@ -61,14 +69,14 @@ TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::RegisterNewAudioSour
 	return Group;
 }
 
-void FGroupedAudioSourcesManager::UnregisterAudioSource(const FName& InName, USceneComponent* SceneComponent)
+void FGroupedAudioSourcesManager::UnregisterAudioSource(const FName& InName, UGroupedAudioComponent* AudioComponent)
 {
 	const int32 NumGroups = ActiveGroups.Num();
 	for (int32 i = NumGroups - 1; i>=0; --i)
 	{
 		if(ActiveGroups[i]->GetName() == InName)
 		{
-			ActiveGroups[i]->TrackedAudioComponents.Remove(SceneComponent);
+			ActiveGroups[i]->TrackedAudioComponents.Remove(AudioComponent);
 		}
 	}
 }
@@ -84,6 +92,13 @@ int FGroupedAudioSourcesManager::GetActiveSourcesCountForGroup(const FName& InGr
 
 	return Group->GetActiveSourcesCount();
 
+}
+
+int FGroupedAudioSourcesManager::GetActiveClustersCountForGroup(const FName& InGroupName)
+{
+	const TSharedPtr<FAudioSourcesGroup> Group = FindGroup(InGroupName);
+
+	return Group->GetActiveClustersCount();
 }
 
 TSharedPtr<FAudioSourcesGroup> FGroupedAudioSourcesManager::FindGroup(const FName& InName)
