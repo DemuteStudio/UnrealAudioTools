@@ -98,12 +98,12 @@ class DM_AUDIOANIMATIONTOOLS_API UAudioAnimationToolsWidget : public UEditorUtil
 public:
 	//Blueprint methods
 	UFUNCTION(BlueprintCallable, Category = "Audio Animation Tools Widget")
-	void AutoGenerateFootstepNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TMap<UAnimNotify*, FFootstepAudioData>& CreatedNotifies, TArray
-	                                  <FFootstepAudioTrack>& CreatedTracks);
+	void AutoGenerateFootstepNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TSubclassOf<UAnimNotify> AnimNotifyClass, TMap<UAnimNotify*,
+	                                  FFootstepAudioData>& CreatedNotifies, TArray<FFootstepAudioTrack>& CreatedTracks);
 
 	UFUNCTION(BlueprintCallable, Category = "Audio Animation Tools Widget")
-	void AutoGenerateFoleyNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TMap<UAnimNotify*, FFoleyAudioData>& CreatedNotifies, TArray
-	                               <FFoleyAudioTrack>& CreatedTracks);
+	void AutoGenerateFoleyNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TSubclassOf<UAnimNotify> AnimNotifyClass, TMap<UAnimNotify*,
+	                               FFoleyAudioData>& CreatedNotifies, TArray<FFoleyAudioTrack>& CreatedTracks);
 
 	//User modifiable variables
 	/**Height under which a foot is considered to touch the ground*/
@@ -136,10 +136,11 @@ public:
 	/**The time in seconds under which a movement will be considered too short to trigger*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FoleyDetails")
 	float FoleyMinimumMovementDuration = 0.05f;
-	
+
+	//Moved this to a method parameter
 	/**Class to use for newly created AnimNotifies (lets you use custom notifies)*/
-	UPROPERTY(EditAnywhere, Category = "Audio Animation Tools Widget")
-	TSubclassOf<UAnimNotify> AnimNotifyClass;
+	//UPROPERTY(EditAnywhere, Category = "Audio Animation Tools Widget")
+	//TSubclassOf<UAnimNotify> AnimNotifyClass;
 
 	/**Should the anim tool spam the log with information*/
 	UPROPERTY(EditAnywhere, Category="Debug")
