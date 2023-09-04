@@ -5,7 +5,7 @@
 
 #include "Animation/AnimNotifies/AnimNotify.h"
 
-void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames,
+void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames,TSubclassOf<UAnimNotify> AnimNotifyClass,
                                                               TMap<UAnimNotify*, FFootstepAudioData>& CreatedNotifies, TArray<FFootstepAudioTrack>& CreatedTracks)
 {
 	CreatedNotifies.Empty();
@@ -160,7 +160,7 @@ void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* Ani
 #endif
 }
 
-void UAudioAnimationToolsWidget::AutoGenerateFoleyNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames,
+void UAudioAnimationToolsWidget::AutoGenerateFoleyNotifies(UAnimSequence* AnimationSequence, TArray<FName> BoneNames,TSubclassOf<UAnimNotify> AnimNotifyClass,
 	TMap<UAnimNotify*, FFoleyAudioData>& CreatedNotifies, TArray<FFoleyAudioTrack>& CreatedTracks)
 {
 	CreatedNotifies.Empty();
