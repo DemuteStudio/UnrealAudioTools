@@ -128,6 +128,12 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails", meta = (ClampMin = "0.0", ClampMax ="1.0", UIMin ="0.0", UIMax ="1.0"))
 	float FootstepDetectionSensitivity = 1.0f;
+	
+	/**Time in seconds to ignore for footstep detection on the edges of the animation.
+	 * Helps with erratic footstep detection on the edges of the animation
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
+	float AnimationEdgesMargin = 0.1f;
 
 	/**In units per second, the speed above which a bone is considered to be moving*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FoleyDetails")

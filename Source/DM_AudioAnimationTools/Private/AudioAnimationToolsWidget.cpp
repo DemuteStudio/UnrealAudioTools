@@ -136,6 +136,9 @@ void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* Ani
 		{
 			//Sensitivity filtering
 			if(FootstepAudioData.FootstepSpeed <= MinimumSpeed) continue;
+			//Filter out events on animation edges
+			if(FootstepAudioData.FootstepTime <= AnimationEdgesMargin ||
+				FootstepAudioData.FootstepTime >= AnimationSequence->GetPlayLength() - AnimationEdgesMargin) continue;
 			
 			FAnimNotifyEvent NewNotifyEvent;
 			NewNotifyEvent.NotifyName = "AutoTag_Footstep";
