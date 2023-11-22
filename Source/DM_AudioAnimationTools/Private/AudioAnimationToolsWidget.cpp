@@ -321,17 +321,17 @@ FVector UAudioAnimationToolsWidget::GetBoneLocation(const UAnimSequence* AnimSeq
 	return RootTransform.TransformPosition(FootTransform.GetLocation());
 }
 
-void UAudioAnimationToolsWidget::GetWorldToRootTransform(const UAnimSequence* AnimSequence, const float Time,
+void UAudioAnimationToolsWidget::GetWorldToRootTransform(const UAnimSequence* AnimSequence, const double Time,
                                                          FTransform& OutTransform)
 {
-	const int AnimationTrackIndex = GetAnimationTrackIndex(0, AnimSequence); //Root is always bone index 0
-	if(AnimationTrackIndex != INDEX_NONE)
+	const FSkeletonPoseBoneIndex RootBoneIndex = FSkeletonPoseBoneIndex(0);
+	if(RootBoneIndex != INDEX_NONE)
 	{
-		AnimSequence->GetBoneTransform(OutTransform, AnimationTrackIndex, Time, false);
+		AnimSequence->GetBoneTransform(OutTransform, RootBoneIndex, Time, false);
 	}
 }
 
-void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, const int BoneIndex, const float Time,
+void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, const int BoneIndex, const double Time,
 	FTransform& OutTransform)
 {
 	OutTransform = FTransform::Identity;
@@ -342,14 +342,14 @@ void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* Ani
 	while(NextBoneIndex != INDEX_NONE)
 	{
 		FTransform ParentTransform;
-		const int TrackIndex = GetAnimationTrackIndex(CurrentBoneIndex, AnimSequence);
-		if(TrackIndex == INDEX_NONE)
+		const FSkeletonPoseBoneIndex BoneIndex = FSkeletonPoseBoneIndex(CurrentBoneIndex);
+		if(BoneIndex == INDEX_NONE)
 		{
 			ParentTransform = ReferenceSkeleton.GetRefBonePose()[CurrentBoneIndex];
 		}
 		else
 		{
-			AnimSequence->GetBoneTransform(ParentTransform, TrackIndex, Time, false);
+			AnimSequence->GetBoneTransform(ParentTransform, BoneIndex, Time, false);
 		}
 
 		OutTransform = OutTransform * ParentTransform;

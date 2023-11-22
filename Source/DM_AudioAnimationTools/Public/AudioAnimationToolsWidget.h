@@ -163,8 +163,8 @@ private:
 
 	static FVector GetBoneLocation(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, int BoneIndex, float Time);
 
-	static void GetWorldToRootTransform(const UAnimSequence* AnimSequence, float Time, FTransform& OutTransform);
+	static void GetWorldToRootTransform(const UAnimSequence* AnimSequence, const double Time, FTransform& OutTransform);
 
-	static void GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, int BoneIndex, float Time, FTransform&
-	                                   OutTransform);
+	static void GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, const int BoneIndex, const double Time, FTransform
+	                                   & OutTransform);
 };
