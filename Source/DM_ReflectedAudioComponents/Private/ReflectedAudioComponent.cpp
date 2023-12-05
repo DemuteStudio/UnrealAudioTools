@@ -2,8 +2,13 @@
 
 
 #include "ReflectedAudioComponent.h"
+
+#include "DMSettings.h"
+#include "ReflectionComponent.h"
+#include "ReflectionSystemConstants.h"
 #include "Sound/AudioBus.h"
 #include "Sound/SoundSourceBus.h"
+#include "SourceEffects/SourceEffectEQ.h"
 #include "SourceEffects/SourceEffectSimpleDelay.h"
 
 
@@ -56,15 +61,19 @@ void UReflectedAudioComponent::BeginPlay()
 		float x = cosf(phi) * r;
 		float z = sinf(phi) * r;
 
-		ReflectionDirections.Emplace(FVector(x, y, z));
+		FVector rayDirection = FVector(x, y, z*(1-HorizontalRaycastSkewing));//z*0.5f to make the reflections more horizontal
+		
+		ReflectionDirections.Emplace(rayDirection);
 
-		UAudioComponent* NewAudioComponent = NewObject<UAudioComponent>(this);
+		UReflectionComponent* NewAudioComponent = NewObject<UReflectionComponent>(this);
 		NewAudioComponent->AttachToComponent(ReflectionsRoot, FAttachmentTransformRules::KeepRelativeTransform);
 		NewAudioComponent->RegisterComponent();
 		NewAudioComponent->SetSound(SoundSourceBus);
 		NewAudioComponent->SourceEffectChain = NewObject<USoundEffectSourcePresetChain>(NewAudioComponent);
 		FSourceEffectChainEntry& delayEffectEntry = NewAudioComponent->SourceEffectChain->Chain.AddDefaulted_GetRef();
 		delayEffectEntry.Preset = NewObject<USourceEffectSimpleDelayPreset>(NewAudioComponent);
+		FSourceEffectChainEntry& eqEffectEntry = NewAudioComponent->SourceEffectChain->Chain.AddDefaulted_GetRef();
+		eqEffectEntry.Preset = NewObject<USourceEffectEQPreset>(NewAudioComponent);
 		ReflectionAudioComponents.Emplace(NewAudioComponent);
 		ReflectionPositions.Emplace(FVector::ZeroVector);
 	}
@@ -105,7 +114,7 @@ void UReflectedAudioComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Recalculate reflection number %d"), currentReflectionIndex);
 
-		UAudioComponent* ReflectionAudioComponent = ReflectionAudioComponents[currentReflectionIndex];
+		UReflectionComponent* ReflectionAudioComponent = ReflectionAudioComponents[currentReflectionIndex];
 
 		//Raycast
 		FHitResult HitResult;
@@ -152,10 +161,31 @@ void UReflectedAudioComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 					ReflectionSourceEffectChain->Chain[0].Preset);
 				if (DelayPreset != nullptr)
 				{
-					DelayPreset->Settings.bDelayBasedOnDistance = false;
+					DelayPreset->Settings.bDelayBasedOnDistance = true;
 					DelayPreset->Settings.DelayAmount = FVector::Dist(OriginLocation, HitResult.Location) /
 						34000.0f;
 					UE_LOG(LogTemp, Warning, TEXT("Delay value %f"), DelayPreset->Settings.DelayAmount);
+				}
+				USourceEffectEQPreset* EQPreset = Cast<USourceEffectEQPreset>(
+					ReflectionSourceEffectChain->Chain[1].Preset);
+				if(EQPreset != nullptr)
+				{
+					FReflectionMaterial ReflectionMaterial = UDMSettings::GetReflectionMaterial(HitResult.PhysMaterial.Get());
+					if(ReflectionAudioComponent->ReflectionMaterial != ReflectionMaterial.ReflectionMaterial)
+					{
+						EQPreset->Settings.EQBands.Empty();
+						for (int i = 0; i < ReflectionMaterial.ReflectionCoefficients.Num(); ++i)
+						{
+							FSourceEffectEQBand& BandSettings = EQPreset->Settings.EQBands.AddDefaulted_GetRef();
+							BandSettings.bEnabled = true;
+							BandSettings.Frequency = 125.0f * powf(2.0f, (i-1));
+							BandSettings.GainDb = UReflectionSystemConstants::ReflectionCoefficientToDbReduction(
+								ReflectionMaterial.ReflectionCoefficients[i]);
+							BandSettings.Bandwidth = 1.0f;
+						}
+
+						ReflectionAudioComponent->ReflectionMaterial = ReflectionMaterial.ReflectionMaterial;
+					}
 				}
 			}
 		}

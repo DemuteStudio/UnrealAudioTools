@@ -6,6 +6,7 @@
 #include "Components/AudioComponent.h"
 #include "ReflectedAudioComponent.generated.h"
 
+class UReflectionComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DM_REFLECTEDAUDIOCOMPONENTS_API UReflectedAudioComponent : public UAudioComponent
@@ -38,11 +39,13 @@ public:
 	TArray<FVector> ReflectionPositions;
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Reflected Audio")
-	TArray<UAudioComponent*> ReflectionAudioComponents;
+	TArray<UReflectionComponent*> ReflectionAudioComponents;
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Reflected Audio")
 	UAudioBus* AudioBus;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Reflected Audio", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
+	float HorizontalRaycastSkewing;
 
 protected:
 	// Called when the game starts
