@@ -21,6 +21,7 @@ public class DM_ReflectedAudioComponents : ModuleRules
                 "Slate",
                 "SlateCore",
                 "Synthesis", 
+                "PhysicsCore",
             }
         );
     }
