@@ -35,8 +35,8 @@ public:
 	// UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Reflected Audio")
 	// float ReflectionInterpolationSpeed = 100.0f;
 	
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "Reflected Audio")
-	TArray<FVector> ReflectionPositions;
+	// UPROPERTY(Transient, BlueprintReadOnly, Category = "Reflected Audio")
+	// TArray<FVector> ReflectionPositions;
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Reflected Audio")
 	TArray<UReflectionComponent*> ReflectionAudioComponents;
@@ -46,6 +46,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Reflected Audio", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
 	float HorizontalRaycastSkewing;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Reflected Audio")
+	int SubReflections = 0;
 
 protected:
 	// Called when the game starts
@@ -64,6 +67,7 @@ private:
 
 	FVector PreviousLocation;
 	int currentReflectionIndex = 0;
+	int currentSubReflectionIndex = 0;
 	bool needsToRecalculateReflections = false;
 	TArray<FVector> ReflectionDirections;
 	bool areReflectionsEnabled = false;

@@ -7,6 +7,8 @@
 #include "UObject/Object.h"
 #include "DMSettings.generated.h"
 
+class UPhysicalMaterial;
+
 /**
  * 
  */

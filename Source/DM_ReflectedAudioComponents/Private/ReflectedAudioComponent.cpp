@@ -39,7 +39,7 @@ void UReflectedAudioComponent::BeginPlay()
 
 
 	ReflectionDirections.Reserve(MaxReflections);
-	ReflectionPositions.Reserve(MaxReflections);
+	//ReflectionPositions.Reserve(MaxReflections);
 	ReflectionAudioComponents.Reserve(MaxReflections);
 
 	const float Offset = 2.f / MaxReflections;
@@ -65,17 +65,12 @@ void UReflectedAudioComponent::BeginPlay()
 		
 		ReflectionDirections.Emplace(rayDirection);
 
-		UReflectionComponent* NewAudioComponent = NewObject<UReflectionComponent>(this);
-		NewAudioComponent->AttachToComponent(ReflectionsRoot, FAttachmentTransformRules::KeepRelativeTransform);
-		NewAudioComponent->RegisterComponent();
-		NewAudioComponent->SetSound(SoundSourceBus);
-		NewAudioComponent->SourceEffectChain = NewObject<USoundEffectSourcePresetChain>(NewAudioComponent);
-		FSourceEffectChainEntry& delayEffectEntry = NewAudioComponent->SourceEffectChain->Chain.AddDefaulted_GetRef();
-		delayEffectEntry.Preset = NewObject<USourceEffectSimpleDelayPreset>(NewAudioComponent);
-		FSourceEffectChainEntry& eqEffectEntry = NewAudioComponent->SourceEffectChain->Chain.AddDefaulted_GetRef();
-		eqEffectEntry.Preset = NewObject<USourceEffectEQPreset>(NewAudioComponent);
-		ReflectionAudioComponents.Emplace(NewAudioComponent);
-		ReflectionPositions.Emplace(FVector::ZeroVector);
+		UReflectionComponent* NewReflectionComponent = NewObject<UReflectionComponent>(this);
+		NewReflectionComponent->SetupReflectionComponent(SoundSourceBus, SubReflections);
+		NewReflectionComponent->AttachToComponent(ReflectionsRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		NewReflectionComponent->RegisterComponent();
+		ReflectionAudioComponents.Emplace(NewReflectionComponent);
+		//ReflectionPositions.Emplace(FVector::ZeroVector);
 	}
 }
 
@@ -108,132 +103,31 @@ void UReflectedAudioComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// ...
 	
 	const FTransform OriginTransform = GetComponentTransform();
-	const FVector OriginLocation = GetComponentLocation();
+	//const FVector OriginLocation = GetComponentLocation();
 
 	if (currentReflectionIndex < MaxReflections)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Recalculate reflection number %d"), currentReflectionIndex);
 
 		UReflectionComponent* ReflectionAudioComponent = ReflectionAudioComponents[currentReflectionIndex];
-
-		//Raycast
-		FHitResult HitResult;
-		const FVector End = OriginLocation + ReflectionDirections[currentReflectionIndex] * MaxReflectionDistance;
-		FCollisionQueryParams CollisionQueryParams;
-		CollisionQueryParams.AddIgnoredActor(GetOwner());
-		CollisionQueryParams.bTraceComplex = true;
-		CollisionQueryParams.bReturnPhysicalMaterial = true;
-		GetWorld()->LineTraceSingleByChannel(HitResult, OriginLocation, End, ECC_Visibility, CollisionQueryParams);
-
-		//Debug ray
-		DrawDebugLine(GetWorld(), OriginLocation, End, HitResult.bBlockingHit ? FColor::Green : FColor::Red, false,
-		              1.0f, 0, 1.0f);
-
-		//Move reflection audio component to hit location
-		if (HitResult.bBlockingHit)
+		
+		if(ReflectionAudioComponent->UpdateReflections(OriginTransform, ReflectionDirections[currentReflectionIndex], MaxReflectionDistance, currentSubReflectionIndex))
 		{
-			ReflectionPositions[currentReflectionIndex] = HitResult.Location;
-
-			ReflectionAudioComponent->SetWorldLocation(HitResult.Location);
-			ReflectionAudioComponent->Play();
-			const FSoundAttenuationSettings* SoundAttenuationSettings = GetAttenuationSettingsToApply();
-			if (SoundAttenuationSettings != nullptr)
-			{
-				float AttenuationVolumeMultiplier = SoundAttenuationSettings->Evaluate(
-					OriginTransform, HitResult.Location);
-				ReflectionAudioComponent->VolumeMultiplier = AttenuationVolumeMultiplier;
-			}
-			else
-			{
-				ReflectionAudioComponent->VolumeMultiplier = 1.0f;
-			}
-			ReflectionAudioComponent->bOverrideAttenuation = true;
-			const FSoundAttenuationSettings* attenuationToApply = GetAttenuationSettingsToApply();
-			if(attenuationToApply != nullptr)
-				ReflectionAudioComponent->AttenuationOverrides = *attenuationToApply;
-
-			USoundEffectSourcePresetChain* ReflectionSourceEffectChain = ReflectionAudioComponents[
-					currentReflectionIndex]->
-				SourceEffectChain;
-			if (ReflectionSourceEffectChain != nullptr && ReflectionSourceEffectChain->Chain.Num() > 0)
-			{
-				USourceEffectSimpleDelayPreset* DelayPreset = Cast<USourceEffectSimpleDelayPreset>(
-					ReflectionSourceEffectChain->Chain[0].Preset);
-				if (DelayPreset != nullptr)
-				{
-					DelayPreset->Settings.bDelayBasedOnDistance = true;
-					DelayPreset->Settings.DelayAmount = FVector::Dist(OriginLocation, HitResult.Location) /
-						34000.0f;
-					UE_LOG(LogTemp, Warning, TEXT("Delay value %f"), DelayPreset->Settings.DelayAmount);
-				}
-				USourceEffectEQPreset* EQPreset = Cast<USourceEffectEQPreset>(
-					ReflectionSourceEffectChain->Chain[1].Preset);
-				if(EQPreset != nullptr)
-				{
-					FReflectionMaterial ReflectionMaterial = UDMSettings::GetReflectionMaterial(HitResult.PhysMaterial.Get());
-					if(ReflectionAudioComponent->ReflectionMaterial != ReflectionMaterial.ReflectionMaterial)
-					{
-						EQPreset->Settings.EQBands.Empty();
-						for (int i = 0; i < ReflectionMaterial.ReflectionCoefficients.Num(); ++i)
-						{
-							FSourceEffectEQBand& BandSettings = EQPreset->Settings.EQBands.AddDefaulted_GetRef();
-							BandSettings.bEnabled = true;
-							BandSettings.Frequency = 125.0f * powf(2.0f, (i-1));
-							BandSettings.GainDb = UReflectionSystemConstants::ReflectionCoefficientToDbReduction(
-								ReflectionMaterial.ReflectionCoefficients[i]);
-							BandSettings.Bandwidth = 1.0f;
-						}
-
-						ReflectionAudioComponent->ReflectionMaterial = ReflectionMaterial.ReflectionMaterial;
-					}
-				}
-			}
+			currentSubReflectionIndex = 0;
+			currentReflectionIndex++;
 		}
 		else
 		{
-			ReflectionPositions[currentReflectionIndex] = FVector::ZeroVector;
-
-			ReflectionAudioComponent->Stop();
-			ReflectionAudioComponent->VolumeMultiplier = 0.0f;
+			currentSubReflectionIndex++;
 		}
-
-		currentReflectionIndex++;
+		
 	}
 	else if (needsToRecalculateReflections)
 	{
 		needsToRecalculateReflections = false;
 		currentReflectionIndex = 0;
+		currentSubReflectionIndex = 0;
 	}
-
-	// //Draw audio component positions
-	// for(int i = 0; i < ReflectionAudioComponents.Num(); ++i)
-	// {
-	// 	DrawDebugSphere(GetWorld(), ReflectionAudioComponents[i]->GetComponentLocation(), 10.0f, 8, FColor::Blue, false, 1.0f, 0, 1.0f);
-	// }
-
-	// for (int i = 0; i < MaxReflections; ++i)
-	// {
-	// 	if (ReflectionPositions[i] != FVector::ZeroVector)
-	// 	{
-	// 		FVector interpLocation = FMath::VInterpConstantTo(
-	// 			ReflectionAudioComponents[i]->GetComponentLocation(),
-	// 			ReflectionPositions[i],
-	// 			DeltaTime,
-	// 			ReflectionInterpolationSpeed);
-	// 		ReflectionAudioComponents[i]->SetWorldLocation(interpLocation);
-	// 		ReflectionAudioComponents[i]->Play();
-	// 		float AttenuationVolumeMultiplier = GetAttenuationSettingsToApply()->Evaluate(
-	// 			OriginTransform, interpLocation);
-	// 		ReflectionAudioComponents[i]->VolumeMultiplier = AttenuationVolumeMultiplier;
-	// 		ReflectionAudioComponents[i]->bOverrideAttenuation = true;
-	// 		ReflectionAudioComponents[i]->AttenuationOverrides = *GetAttenuationSettingsToApply();
-	// 	}
-	// 	else
-	// 	{
-	// 		ReflectionAudioComponents[i]->Stop();
-	// 		ReflectionAudioComponents[i]->VolumeMultiplier = 0.0f;
-	// 	}
-	// }
 }
 
 void UReflectedAudioComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)

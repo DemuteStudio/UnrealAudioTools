@@ -1,7 +1,7 @@
 ﻿#include "DM_ReflectedAudioComponents.h"
 
 #include "DMSettings.h"
-#include "ISettingsModule.h"
+#include "Developer/Settings/Public/ISettingsModule.h"
 
 #define LOCTEXT_NAMESPACE "FDM_ReflectedAudioComponentsModule"
 
