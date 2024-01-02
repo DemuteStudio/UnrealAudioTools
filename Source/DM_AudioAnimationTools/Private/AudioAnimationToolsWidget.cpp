@@ -9,97 +9,16 @@ void UAudioAnimationToolsWidget::AutoGenerateFootstepNotifies(UAnimSequence* Ani
                                                               TMap<UAnimNotify*, FFootstepAudioData>& CreatedNotifies, TArray<FFootstepAudioTrack>& CreatedTracks)
 {
 	CreatedNotifies.Empty();
-
-	if(AnimationSequence == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : passed a null AnimSequence. Early exit."));
-		return;
-	}
-
-	const USkeleton* Skeleton = AnimationSequence->GetSkeleton();
-
-	if(Skeleton == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : AnimSequence had a null skeleton. Early exit."));
-		return;
-	}
-
-	const FReferenceSkeleton& ReferenceSkeleton = Skeleton->GetReferenceSkeleton();
-
-	TMap<FName, int> BoneIndexesMap;
-	for (FName BoneName : BoneNames)
-	{
-		const int BoneIndex = ReferenceSkeleton.FindBoneIndex(BoneName);
-		if(BoneIndex != INDEX_NONE)
-		{
-			BoneIndexesMap.Add(BoneName, BoneIndex);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : Bone %s does not exist, skipping it"), *BoneName.ToString());
-		}
-	}
 	
 	CreatedTracks.Empty();
 
-
-	for (const TTuple<FName, int>& Bone : BoneIndexesMap)
-	{
-		FFootstepAudioTrack& NewFootstepTrack = CreatedTracks.AddDefaulted_GetRef();
-		NewFootstepTrack.TrackName = FName(*("AutoGen " + Bone.Key.ToString()));
-
-		float GroundContactSinceTime = 0.0f; //Assume feet start on ground
-		//Debug values tracking
-		NewFootstepTrack.HighestBonePosition = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, 0).Z;;
-		NewFootstepTrack.LowestBonePosition = NewFootstepTrack.HighestBonePosition;
-		NewFootstepTrack.FastestBoneSpeed = 0.0f;
-		NewFootstepTrack.SlowestBoneSpeed = -1.0f;
-		
-		for (float Time = AnimationTimeIncrement; Time < AnimationSequence->GetPlayLength(); Time += AnimationTimeIncrement)
-		{
-			const FVector FootLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time);
-
-			const bool GroundContact = GroundContactSinceTime < 0.0f? FootLocation.Z <= GroundContactStartThreshold : FootLocation.Z <= GroundContactStartThreshold + GroundContactStopMargin;
-
-			if(FootLocation.Z > NewFootstepTrack.HighestBonePosition) NewFootstepTrack.HighestBonePosition = FootLocation.Z;
-			if(FootLocation.Z < NewFootstepTrack.LowestBonePosition) NewFootstepTrack.LowestBonePosition = FootLocation.Z;
-			
-			if(VerboseLogging)
-			{
-				UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s height on time %f was %f units."), *Bone.Key.ToString(), Time, FootLocation.Z);
-			}
-			
-			if(GroundContact && GroundContactSinceTime < 0.0f) //New footstep!
-			{
-
-				if(VerboseLogging)
-				{
-					UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s did a footstep on time %f"), *Bone.Key.ToString(), Time);
-				}
-				
-				GroundContactSinceTime = Time;
-
-				FVector PastFootLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time-FootstepSpeedCalculationWindow);
-				const float FootSpeed = ((FootLocation - PastFootLocation)/FootstepSpeedCalculationWindow).Size();
-				FFootstepAudioData& NewFootstep = NewFootstepTrack.Footsteps.AddDefaulted_GetRef();
-				NewFootstep.BoneName = Bone.Key;
-				NewFootstep.FootstepTime = Time;
-				NewFootstep.FootstepSpeed = FootSpeed;
-
-				//Values for filtering
-				if(FootSpeed < NewFootstepTrack.SlowestBoneSpeed || NewFootstepTrack.SlowestBoneSpeed == -1.0f) NewFootstepTrack.SlowestBoneSpeed = FootSpeed;
-				if(FootSpeed > NewFootstepTrack.FastestBoneSpeed) NewFootstepTrack.FastestBoneSpeed = FootSpeed;
-			}
-			else if(!GroundContact && GroundContactSinceTime >= 0.0f) //Foot stopped touching ground
-			{
-				GroundContactSinceTime = -1.0f;
-
-				if(VerboseLogging)
-				{
-					UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s stopped touching ground on time %f"), *Bone.Key.ToString(), Time);
-				}
-			}
-		}
+	switch (FootstepDetectionMethod) {
+	case HeightThreshold:
+		CalculateFootstepsWithHeightThreshold(AnimationSequence, BoneNames, CreatedTracks);
+		break;
+	case TangentCalculation:
+		CalculateFootstepsWithTangents(AnimationSequence, BoneNames, CreatedTracks);
+		break;
 	}
 
 #if WITH_EDITORONLY_DATA
@@ -292,6 +211,177 @@ void UAudioAnimationToolsWidget::AutoGenerateFoleyNotifies(UAnimSequence* Animat
 #endif
 }
 
+void UAudioAnimationToolsWidget::CalculateFootstepsWithHeightThreshold(UAnimSequence* AnimationSequence,
+	TArray<FName> BoneNames, TArray<FFootstepAudioTrack>& FootstepTracks)
+{
+	if(AnimationSequence == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : passed a null AnimSequence. Early exit."));
+		return;
+	}
+
+	const USkeleton* Skeleton = AnimationSequence->GetSkeleton();
+
+	if(Skeleton == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : AnimSequence had a null skeleton. Early exit."));
+		return;
+	}
+
+	const FReferenceSkeleton& ReferenceSkeleton = Skeleton->GetReferenceSkeleton();
+
+	TMap<FName, int> BoneIndexesMap;
+	for (FName BoneName : BoneNames)
+	{
+		const int BoneIndex = ReferenceSkeleton.FindBoneIndex(BoneName);
+		if(BoneIndex != INDEX_NONE)
+		{
+			BoneIndexesMap.Add(BoneName, BoneIndex);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- AutoGenerateFootstepNotifies : Bone %s does not exist, skipping it"), *BoneName.ToString());
+		}
+	}
+	
+	FootstepTracks.Empty();
+
+	for (const TTuple<FName, int>& Bone : BoneIndexesMap)
+	{
+		FFootstepAudioTrack& NewFootstepTrack = FootstepTracks.AddDefaulted_GetRef();
+		NewFootstepTrack.TrackName = FName(*("AutoGen " + Bone.Key.ToString()));
+
+		float GroundContactSinceTime = 0.0f; //Assume feet start on ground
+		//Debug values tracking
+		NewFootstepTrack.HighestBonePosition = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, 0).Z;;
+		NewFootstepTrack.LowestBonePosition = NewFootstepTrack.HighestBonePosition;
+		NewFootstepTrack.FastestBoneSpeed = 0.0f;
+		NewFootstepTrack.SlowestBoneSpeed = -1.0f;
+		
+		for (float Time = AnimationTimeIncrement; Time < AnimationSequence->GetPlayLength(); Time += AnimationTimeIncrement)
+		{
+			const FVector FootLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time);
+
+			const bool GroundContact = GroundContactSinceTime < 0.0f? FootLocation.Z <= GroundContactStartThreshold : FootLocation.Z <= GroundContactStartThreshold + GroundContactStopMargin;
+
+			if(FootLocation.Z > NewFootstepTrack.HighestBonePosition) NewFootstepTrack.HighestBonePosition = FootLocation.Z;
+			if(FootLocation.Z < NewFootstepTrack.LowestBonePosition) NewFootstepTrack.LowestBonePosition = FootLocation.Z;
+			
+			if(VerboseLogging)
+			{
+				UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s height on time %f was %f units."), *Bone.Key.ToString(), Time, FootLocation.Z);
+			}
+			
+			if(GroundContact && GroundContactSinceTime < 0.0f) //New footstep!
+			{
+
+				if(VerboseLogging)
+				{
+					UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s did a footstep on time %f"), *Bone.Key.ToString(), Time);
+				}
+				
+				GroundContactSinceTime = Time;
+
+				FVector PastFootLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time-FootstepSpeedCalculationWindow);
+				const float FootSpeed = ((FootLocation - PastFootLocation)/FootstepSpeedCalculationWindow).Size();
+				FFootstepAudioData& NewFootstep = NewFootstepTrack.Footsteps.AddDefaulted_GetRef();
+				NewFootstep.BoneName = Bone.Key;
+				NewFootstep.FootstepTime = Time;
+				NewFootstep.FootstepSpeed = FootSpeed;
+
+				//Values for filtering
+				if(FootSpeed < NewFootstepTrack.SlowestBoneSpeed || NewFootstepTrack.SlowestBoneSpeed == -1.0f) NewFootstepTrack.SlowestBoneSpeed = FootSpeed;
+				if(FootSpeed > NewFootstepTrack.FastestBoneSpeed) NewFootstepTrack.FastestBoneSpeed = FootSpeed;
+			}
+			else if(!GroundContact && GroundContactSinceTime >= 0.0f) //Foot stopped touching ground
+			{
+				GroundContactSinceTime = -1.0f;
+
+				if(VerboseLogging)
+				{
+					UE_LOG(LogTemp, Log, TEXT("AudioAnimationTools : Bone %s stopped touching ground on time %f"), *Bone.Key.ToString(), Time);
+				}
+			}
+		}
+	}
+}
+
+void UAudioAnimationToolsWidget::CalculateFootstepsWithTangents(UAnimSequence* AnimationSequence,
+                                                                TArray<FName> BoneNames, TArray<FFootstepAudioTrack>& FootstepTracks)
+{
+	FootstepTracks.Empty();
+
+	if(AnimationSequence == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- CalculateFootstepsWithTangents : passed a null AnimSequence. Early exit."));
+		return;
+	}
+
+	const USkeleton* Skeleton = AnimationSequence->GetSkeleton();
+
+	if(Skeleton == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- CalculateFootstepsWithTangents : AnimSequence had a null skeleton. Early exit."));
+		return;
+	}
+
+	const FReferenceSkeleton& ReferenceSkeleton = Skeleton->GetReferenceSkeleton();
+
+	TMap<FName, int> BoneIndexesMap;
+	for (FName BoneName : BoneNames)
+	{
+		const int BoneIndex = ReferenceSkeleton.FindBoneIndex(BoneName);
+		if(BoneIndex != INDEX_NONE)
+		{
+			BoneIndexesMap.Add(BoneName, BoneIndex);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("AudioAnimationToolsWidget -- CalculateFootstepsWithTangents : Bone %s does not exist, skipping it"), *BoneName.ToString());
+		}
+	}
+
+	for (const TTuple<FName, int>& Bone : BoneIndexesMap)
+	{
+		FFootstepAudioTrack& NewFootstepTrack = FootstepTracks.AddDefaulted_GetRef();
+		NewFootstepTrack.TrackName = FName(*("AutoGen " + Bone.Key.ToString()));
+
+		//Debug values tracking
+		NewFootstepTrack.HighestBonePosition = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, 0).Z;;
+		NewFootstepTrack.LowestBonePosition = NewFootstepTrack.HighestBonePosition;
+		NewFootstepTrack.FastestBoneSpeed = 0.0f;
+		NewFootstepTrack.SlowestBoneSpeed = -1.0f;
+		
+		bool wasGoingDown = false;
+		FVector PreviousBoneLocation = FVector::ZeroVector;
+		for (float Time = AnimationTimeIncrement; Time < AnimationSequence->GetPlayLength(); Time+=AnimationTimeIncrement)
+		{
+			FVector BoneLocation = GetBoneLocation(AnimationSequence, ReferenceSkeleton, Bone.Value, Time);
+			bool goingDown = BoneLocation.Z < PreviousBoneLocation.Z-FootstepSpeedThreshold;
+
+			if(BoneLocation.Z > NewFootstepTrack.HighestBonePosition) NewFootstepTrack.HighestBonePosition = BoneLocation.Z;
+			if(BoneLocation.Z < NewFootstepTrack.LowestBonePosition) NewFootstepTrack.LowestBonePosition = BoneLocation.Z;
+			
+			if(!goingDown && wasGoingDown) //Footstep!
+			{
+				const float FootSpeed = ((BoneLocation - PreviousBoneLocation)/FootstepSpeedCalculationWindow).Size();
+				FFootstepAudioData& NewFootstep = NewFootstepTrack.Footsteps.AddDefaulted_GetRef();
+				NewFootstep.BoneName = Bone.Key;
+				NewFootstep.FootstepTime = Time;
+				NewFootstep.FootstepSpeed = FootSpeed;
+
+				//Values for filtering
+				if(FootSpeed < NewFootstepTrack.SlowestBoneSpeed || NewFootstepTrack.SlowestBoneSpeed == -1.0f) NewFootstepTrack.SlowestBoneSpeed = FootSpeed;
+				if(FootSpeed > NewFootstepTrack.FastestBoneSpeed) NewFootstepTrack.FastestBoneSpeed = FootSpeed;
+			}
+
+			wasGoingDown = goingDown;
+			PreviousBoneLocation = BoneLocation;
+		}
+	}
+	
+}
+
 int UAudioAnimationToolsWidget::GetAnimationTrackIndex(const int SkeletonBoneIndex, const UAnimSequence* AnimSequence)
 {
 	const TArray<FTrackToSkeletonMap>& TrackToSkeletonMaps = AnimSequence->GetCompressedTrackToSkeletonMapTable();
@@ -321,17 +411,17 @@ FVector UAudioAnimationToolsWidget::GetBoneLocation(const UAnimSequence* AnimSeq
 	return RootTransform.TransformPosition(FootTransform.GetLocation());
 }
 
-void UAudioAnimationToolsWidget::GetWorldToRootTransform(const UAnimSequence* AnimSequence, const float Time,
+void UAudioAnimationToolsWidget::GetWorldToRootTransform(const UAnimSequence* AnimSequence, const double Time,
                                                          FTransform& OutTransform)
 {
-	const int AnimationTrackIndex = GetAnimationTrackIndex(0, AnimSequence); //Root is always bone index 0
-	if(AnimationTrackIndex != INDEX_NONE)
+	const FSkeletonPoseBoneIndex RootBoneIndex = FSkeletonPoseBoneIndex(0);
+	if(RootBoneIndex != INDEX_NONE)
 	{
-		AnimSequence->GetBoneTransform(OutTransform, AnimationTrackIndex, Time, false);
+		AnimSequence->GetBoneTransform(OutTransform, RootBoneIndex, Time, false);
 	}
 }
 
-void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, const int BoneIndex, const float Time,
+void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* AnimSequence, const FReferenceSkeleton& ReferenceSkeleton, const int BoneIndex, const double Time,
 	FTransform& OutTransform)
 {
 	OutTransform = FTransform::Identity;
@@ -342,14 +432,14 @@ void UAudioAnimationToolsWidget::GetRootToBoneTransform(const UAnimSequence* Ani
 	while(NextBoneIndex != INDEX_NONE)
 	{
 		FTransform ParentTransform;
-		const int TrackIndex = GetAnimationTrackIndex(CurrentBoneIndex, AnimSequence);
-		if(TrackIndex == INDEX_NONE)
+		const FSkeletonPoseBoneIndex BoneIndex = FSkeletonPoseBoneIndex(CurrentBoneIndex);
+		if(BoneIndex == INDEX_NONE)
 		{
 			ParentTransform = ReferenceSkeleton.GetRefBonePose()[CurrentBoneIndex];
 		}
 		else
 		{
-			AnimSequence->GetBoneTransform(ParentTransform, TrackIndex, Time, false);
+			AnimSequence->GetBoneTransform(ParentTransform, BoneIndex, Time, false);
 		}
 
 		OutTransform = OutTransform * ParentTransform;
