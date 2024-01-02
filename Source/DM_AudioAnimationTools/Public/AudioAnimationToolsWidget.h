@@ -86,6 +86,13 @@ struct FFoleyAudioTrack
 	TArray<FFoleyAudioData> FoleyMovements;
 };
 
+UENUM(BlueprintType)
+enum EFootstepDetectionMethod
+{
+	HeightThreshold,
+	TangentCalculation
+};
+
 
 /**
  * 
@@ -107,13 +114,17 @@ public:
 
 	//User modifiable variables
 	/**Height under which a foot is considered to touch the ground*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails", meta = (EditCondition = "FootstepDetectionMethod == EFootstepDetectionMethod::HeightThreshold"))
 	float GroundContactStartThreshold = 3.0f;
 
 	/**Height added to the GroundContactStartThreshold above which a foot is considered to not touch the ground anymore*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails", meta = (EditCondition = "FootstepDetectionMethod == EFootstepDetectionMethod::HeightThreshold"))
 	float GroundContactStopMargin = 3.0f;
 
+	/**Speed under which any footsteps movements will be ignored*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails", meta = (EditCondition = "FootstepDetectionMethod == EFootstepDetectionMethod::TangentCalculation"))
+	float FootstepSpeedThreshold = 1.0f;
+	
 	/**The time in seconds used to calculate the speed of the foot just before a footstep (to derive its strength)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
 	float FootstepSpeedCalculationWindow = 0.1f;
@@ -151,12 +162,19 @@ public:
 	/**Should the anim tool spam the log with information*/
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool VerboseLogging = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FootstepDetails")
+	TEnumAsByte<EFootstepDetectionMethod> FootstepDetectionMethod = EFootstepDetectionMethod::HeightThreshold;
 	
 	
 private:
 
 	//System variables
 	const float AnimationTimeIncrement = 1.0f / 60.0f;
+
+	void CalculateFootstepsWithHeightThreshold(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TArray<FFootstepAudioTrack>& FootstepTracks);
+	
+	void CalculateFootstepsWithTangents(UAnimSequence* AnimationSequence, TArray<FName> BoneNames, TArray<FFootstepAudioTrack>& FootstepTracks);
 	
 	//System methods
 	static int GetAnimationTrackIndex(int SkeletonBoneIndex, const UAnimSequence* AnimSequence);
